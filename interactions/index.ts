@@ -1,5 +1,7 @@
-import path = require("path");
-import { AzureFunctionServer, SlashCreator } from 'slash-create';
+import { 
+    AzureFunctionServer, 
+    SlashCreator 
+} from 'slash-create';
 
 const creator = new SlashCreator({
     applicationID: process.env["ESPORTS_APP_ID"],
@@ -7,13 +9,13 @@ const creator = new SlashCreator({
     token: process.env["ESPORTS_TOKEN"]
 });
 
-creator.on('warn', m => console.log('slash-create warn:', m))
-creator.on('error', m => console.log('slash-create error:', m))
+creator.on('warn', m => console.log('[WARNING] slash-create:', m));
+creator.on('error', m => console.log('[ERROR] slash-create:', m));
 
-// The first argument is required, but the second argument is the "target" or the name of the export.
-// By default, the target is "interactions".
+console.log(`Establishing Azure function server`);
 creator.withServer(new AzureFunctionServer(module.exports));
 
 (async() => {
+    console.log(`Registering commands in dir: 'interactions/commands'`);
     await creator.registerCommandsIn(require('path').join(__dirname, 'commands'));
 })();

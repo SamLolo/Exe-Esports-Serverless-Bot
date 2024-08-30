@@ -1,7 +1,12 @@
-import { SlashCommand, CommandOptionType } from 'slash-create';
+import { 
+  SlashCommand, 
+  CommandOptionType, 
+  CommandContext, 
+  SlashCreator 
+} from 'slash-create';
 
 export default class HelloCommand extends SlashCommand {
-  constructor(creator) {
+  constructor(creator: SlashCreator) {
     super(creator, {
       name: 'hello',
       description: 'Says hello to you.',
@@ -13,7 +18,7 @@ export default class HelloCommand extends SlashCommand {
     });
   }
 
-  async run(ctx) {
+  async run(ctx: CommandContext) {
     return ctx.options.food ? `You like ${ctx.options.food}? Nice!` : `Hello, ${ctx.user.username}!`;
   }
 }
