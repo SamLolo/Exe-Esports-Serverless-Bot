@@ -9,10 +9,10 @@ import {
     SlashCreator 
 } from 'slash-create';
 
-export default async function sync (
+const sync: AzureFunction = async function (
     context: Context, 
     req: HttpRequest
-): Promise<HttpResponseSimple> {
+    ): Promise<HttpResponseSimple> {
     context.log('Recieved Request to sync commands to Discord');
     const guild = req.query.guild;
     
@@ -42,3 +42,5 @@ export default async function sync (
     };
 
 };
+
+export default sync;
