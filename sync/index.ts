@@ -1,8 +1,7 @@
 import { 
     AzureFunction, 
     Context, 
-    HttpRequest, 
-    HttpResponseSimple
+    HttpRequest
 } from "@azure/functions"
 
 import { 
@@ -12,7 +11,7 @@ import {
 const sync: AzureFunction = async function (
     context: Context, 
     req: HttpRequest
-    ): Promise<HttpResponseSimple> {
+    ): Promise<void> {
     context.log('Recieved Request to sync commands to Discord');
     const guild = req.query.guild;
     
@@ -36,7 +35,7 @@ const sync: AzureFunction = async function (
         await creator.syncCommandsIn(guild);
     };
 
-    return {
+    context.res = {
         status: 200,
         body: "Success"
     };
