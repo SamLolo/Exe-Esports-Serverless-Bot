@@ -7,13 +7,13 @@ import {
   
 export default class EchoCommand extends SlashCommand {
     constructor(creator: SlashCreator) {
-        console.log("Registered Command: /echo")
+        console.log("Registered Command: /message")
         super(creator, {
-            name: 'echo',
-            description: 'Echos a message in a specified channel.',
+            name: 'message',
+            description: 'Send messages with the bot account in another channel.',
             options: [{
                 type: CommandOptionType.STRING,
-                name: 'message',
+                name: 'content',
                 description: 'The message to repeat.',
                 required: true
             },
@@ -21,7 +21,7 @@ export default class EchoCommand extends SlashCommand {
                 type: CommandOptionType.CHANNEL,
                 name: 'channel',
                 description: 'The channel to type the message in.',
-                required: false
+                required: true
             }]
       });
     }
@@ -33,7 +33,7 @@ export default class EchoCommand extends SlashCommand {
                                            `/channels/${ctx.options.channel}/messages`,
                                            {
                                                 auth: true,
-                                                body: {"content": ctx.options.message}                            
+                                                body: {"content": ctx.options.content}                            
                                            });
         return `Success`;
     }

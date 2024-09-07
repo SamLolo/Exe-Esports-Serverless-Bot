@@ -11,7 +11,9 @@ import {
 import { ChannelDto } from '../../Dtos/ChannelDto';
 
 
-const VERIFY_CHANNEL = "1153055395259101194";
+const VERIFY_CHANNEL = process.env['VERFIY_CHANNEL_ID'];
+const LOG_CHANNEL = process.env['LOG_CHANNEL_ID']
+const MEMBER_ROLE = process.env['MEMBER_ROLE_ID']
 
 
 async function onFormComplete(ctx: ModalInteractionContext) {
