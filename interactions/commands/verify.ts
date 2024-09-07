@@ -6,14 +6,16 @@ import {
   TextInputStyle,
   ModalInteractionContext,
   ButtonStyle,
-  ComponentContext
+  ComponentContext,
+  DiscordHTTPError,
+  DiscordRESTError
 } from 'slash-create';
 import { ChannelDto } from '../../Dtos/ChannelDto';
 
 
-const VERIFY_CHANNEL = process.env['VERFIY_CHANNEL_ID'];
-const LOG_CHANNEL = process.env['LOG_CHANNEL_ID']
-const MEMBER_ROLE = process.env['MEMBER_ROLE_ID']
+const VERIFY_CHANNEL = process.env["VERIFY_CHANNEL_ID"];
+const LOG_CHANNEL = process.env["LOG_CHANNEL_ID"];
+const MEMBER_ROLE = process.env['MEMBER_ROLE_ID'];
 
 
 async function onFormComplete(ctx: ModalInteractionContext) {
@@ -50,19 +52,21 @@ async function onFormComplete(ctx: ModalInteractionContext) {
             type: ComponentType.ACTION_ROW,
             components: [
               {
-              custom_id: 'member_reject',
+              custom_id: `member-reject-${ctx.user.id}`,
               label: "Reject",
               style: ButtonStyle.DANGER,
               type: ComponentType.BUTTON
             },
             {
-              custom_id: 'member_accept',
+              custom_id: `member-accept-${ctx.user.id}`,
               label: "Accept",
               style: ButtonStyle.SUCCESS,
               type: ComponentType.BUTTON
             }]
           }]
       }});
+  ctx.creator.registerGlobalComponent(`member-reject-${ctx.user.id}`, onVerifyDenied);
+  ctx.creator.registerGlobalComponent(`member-accept-${ctx.user.id}`, onVerifyApproved);
   await ctx.send(`Thank you! Your request has been sent to the committee for moderation.\nYou will recieve an update here once you've recieved your role!`);
 }
 
@@ -111,13 +115,21 @@ async function onPrivacyDecline(ctx: ComponentContext) {
 
 async function onVerifyApproved(ctx: ComponentContext) {
   await ctx.delete(ctx.message.id);
-  console.log("Approved");
+
+  const user_id = ctx.customID.substring(14);
+  ctx.creator.unregisterGlobalComponent(`member-accept-${user_id}`);
+  ctx.creator.unregisterGlobalComponent(`member-reject-${user_id}`);
+
 }
 
 
 async function onVerifyDenied(ctx: ComponentContext) {
   await ctx.delete(ctx.message.id);
-  console.log("Denied");
+  
+  const user_id = ctx.customID.substring(14);
+  ctx.creator.unregisterGlobalComponent(`member-accept-${user_id}`);
+  ctx.creator.unregisterGlobalComponent(`member-reject-${user_id}`);
+
 }
 
 
@@ -131,50 +143,75 @@ export default class VerifyCommand extends SlashCommand {
 
     creator.registerGlobalComponent("privacy_accept", onPrivacyAccept);
     creator.registerGlobalComponent("privacy_decline", onPrivacyDecline);
-    creator.registerGlobalComponent("member_reject", onVerifyDenied);
-    creator.registerGlobalComponent("member_accept", onVerifyApproved);
   }
 
   async run(ctx: CommandContext) {
-    const res: ChannelDto = await ctx.creator.requestHandler.request(
-      "POST",
-      "/users/@me/channels",
-      {
-        auth: true,
-        body: {
-          "recipient_id": ctx.user.id
+    try {
+      var res: ChannelDto = await ctx.creator.requestHandler.request(
+        "POST",
+        "/users/@me/channels",
+        {
+          auth: true,
+          body: {
+            "recipient_id": ctx.user.id
+          }
         }
-      }
-    );
-
-    ctx.creator.requestHandler.request("POST", 
-    `/channels/${res.id}/messages`,
-    {
-      auth: true,
-      body: {
-        content: "`Placeholder TOCs`",
-        components: [
-          {
-            type: ComponentType.ACTION_ROW,
+      );
+      
+      await ctx.creator.requestHandler.request("POST", 
+        `/channels/${res.id}/messages`,
+        {
+          auth: true,
+          body: {
+            content: "`Placeholder TOCs`",
             components: [
               {
-              custom_id: 'privacy_decline',
-              label: "Cancel",
-              style: ButtonStyle.SECONDARY,
-              type: ComponentType.BUTTON
-            },
-            {
-              custom_id: 'privacy_accept',
-              label: "Accept",
-              style: ButtonStyle.SUCCESS,
-              type: ComponentType.BUTTON
-            }]
-          }
-        ]
-      }                            
-    });
+                type: ComponentType.ACTION_ROW,
+                components: [
+                  {
+                  custom_id: 'privacy_decline',
+                  label: "Cancel",
+                  style: ButtonStyle.SECONDARY,
+                  type: ComponentType.BUTTON
+                },
+                {
+                  custom_id: 'privacy_accept',
+                  label: "Accept",
+                  style: ButtonStyle.SUCCESS,
+                  type: ComponentType.BUTTON
+                }]
+              }
+            ]
+          }                            
+        });
+
+    } catch(e) {
+      if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
+        if (e.code == 403) {
+          await ctx.send({
+            content: "Failed to send DM. See here for more info: https://support.discord.com/hc/en-us/articles/360060145013-Why-isn-t-my-DM-going-through",
+            ephemeral: true
+          });
+          return;
+        
+        } else {
+          console.log(`Discord responded with ${e.code} whilst trying to create DM.`);
+          await ctx.send({
+            content: "An unknown error occured. If this issue persists, contact a member of committee!",
+            ephemeral: true
+          });
+        }
+      
+      } else {
+        await ctx.send({
+          content: "An unknown error occured. If this issue persists, contact a member of committee!",
+          ephemeral: true
+        });
+      }
+      throw e;
+    };
   
-    ctx.send({
+    await ctx.send({
       content: "Please check your DMs",
       ephemeral: true
     });

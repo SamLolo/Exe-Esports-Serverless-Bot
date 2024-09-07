@@ -9,6 +9,7 @@ const creator = new SlashCreator({
     token: process.env["ESPORTS_TOKEN"]
 });
 
+creator.on('debug', m => console.log('[DEBUG] slash-create:', m));
 creator.on('warn', m => console.log('[WARNING] slash-create:', m));
 creator.on('error', m => console.log('[ERROR] slash-create:', m));
 
