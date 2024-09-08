@@ -18,6 +18,7 @@ import { GuildMemberDto } from '../../Dtos/UserDto';
 const VERIFY_CHANNEL = process.env["VERIFY_CHANNEL_ID"];
 const LOG_CHANNEL = process.env["LOG_CHANNEL_ID"];
 const MEMBER_ROLE = process.env['MEMBER_ROLE_ID'];
+const GUILD_ID = process.env['GUILD_ID'];
 
 
 async function onFormComplete(ctx: ModalInteractionContext) {
@@ -120,20 +121,27 @@ async function onVerifyApproved(ctx: ComponentContext) {
   const user_id = ctx.customID.substring(14);
 
   try {
-    const role_res: GuildMemberDto = await ctx.creator.requestHandler.request(
+    const member: GuildMemberDto = await ctx.creator.requestHandler.request(
+      "GET",
+      `/guilds/${GUILD_ID}/members/${user_id}`,
+      {
+        auth: true
+      }
+    );
+    member.roles.push(MEMBER_ROLE);
+    await ctx.creator.requestHandler.request(
       "PATCH",
-      `/guilds/${ctx.guildID}/members/${user_id}`,
+      `/guilds/${GUILD_ID}/members/${user_id}`,
       {
         auth: true,
         body: {
-          roles: [MEMBER_ROLE]
+          roles: member.roles
         },
         headers: {
           "X-Audit-Log-Reason": "Membership verified by committee."
         }
       }
     );
-    console.log(role_res);
   } catch(e) {
     if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
       console.log(`Discord responded with ${e.code} whilst trying to create DM.`);
@@ -168,7 +176,7 @@ async function onVerifyApproved(ctx: ComponentContext) {
       {
         auth: true,
         body: {
-          content: "You have now recieved your member role! Thank you for supporting Univeristy of Exeter Esports Society 💚",
+          content: "You have now recieved your member role! Thank you for supporting the University of Exeter Esports Society 💚",
           message_reference: {
             type: 0,
             message_id: dm_res.last_message_id,
@@ -234,7 +242,8 @@ async function onVerifyDenied(ctx: ComponentContext) {
       }
     );
     
-    await ctx.creator.requestHandler.request("POST", 
+    await ctx.creator.requestHandler.request(
+      "POST", 
       `/channels/${res.id}/messages`,
       {
         auth: true,
@@ -250,19 +259,17 @@ async function onVerifyDenied(ctx: ComponentContext) {
 
   } catch(e) {
     if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
-      if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
-        console.log(`Discord responded with ${e.code} whilst trying to create DM.`);
-        await ctx.send({
-          content: "Unable to send a DM.",
-          ephemeral: true
-        });
-      } else {
-        await ctx.send({
-          content: "An unexpected error occured whilst trying to DM the member.",
-          ephemeral: true
-        });
-        throw e;
-      }
+      console.log(`Discord responded with ${e.code} whilst trying to create DM.`);
+      await ctx.send({
+        content: "Unable to send a DM.",
+        ephemeral: true
+      });
+    } else {
+      await ctx.send({
+        content: "An unexpected error occured whilst trying to DM the member.",
+        ephemeral: true
+      });
+      throw e;
     }
   };
 
