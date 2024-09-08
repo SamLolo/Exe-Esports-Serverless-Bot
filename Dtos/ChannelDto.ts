@@ -20,7 +20,7 @@ export interface ChannelDto {
     bitrate?: number,
     user_limit?: number,
     rate_limit_per_user?: number,
-    recipients?: UserDto,
+    recipients?: Array<UserDto>,
     icon?: string | undefined,
     owner_id?: string,
     application_id?: string,

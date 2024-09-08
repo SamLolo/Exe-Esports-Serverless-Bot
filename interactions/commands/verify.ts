@@ -10,7 +10,9 @@ import {
   DiscordHTTPError,
   DiscordRESTError
 } from 'slash-create';
+
 import { ChannelDto } from '../../Dtos/ChannelDto';
+import { GuildMemberDto } from '../../Dtos/UserDto';
 
 
 const VERIFY_CHANNEL = process.env["VERIFY_CHANNEL_ID"];
@@ -29,6 +31,7 @@ async function onFormComplete(ctx: ModalInteractionContext) {
         embeds: [{
           title: "Verification Request",
           type: "rich",
+          color: 2067276,
           timestamp: new Date(), 
           fields: [
             {
@@ -114,12 +117,58 @@ async function onPrivacyDecline(ctx: ComponentContext) {
 
 
 async function onVerifyApproved(ctx: ComponentContext) {
-  await ctx.delete(ctx.message.id);
-
   const user_id = ctx.customID.substring(14);
+
+  const role_res: GuildMemberDto = await ctx.creator.requestHandler.request(
+    "PATCH",
+    `/guilds/${ctx.guildID}/members/${user_id}`,
+    {
+      auth: true,
+      body: {
+        roles: [MEMBER_ROLE]
+      }
+    }
+  );
+  console.log(role_res);
+
+  try {
+    const res: ChannelDto = await ctx.creator.requestHandler.request(
+      "POST",
+      "/users/@me/channels",
+      {
+        auth: true,
+        body: {
+          "recipient_id": user_id
+        }
+      }
+    );
+    
+    await ctx.creator.requestHandler.request(
+      "POST", 
+      `/channels/${res.id}/messages`,
+      {
+        auth: true,
+        body: {
+          content: "You have now recieved your member role! Thank you for supporting Univeristy of Exeter Esports Society 💚"
+        }                            
+      });
+    var DMSuccess = true;
+  } catch(e) {
+    if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
+      console.log(`Discord responded with ${e.code} whilst trying to create DM.`);
+      var DMSuccess = false;
+    } else {
+      await ctx.send({
+        content: "An unexpected error occured whilst trying to DM the member.",
+        ephemeral: true
+      })
+      throw e;
+    }
+  };
+
+  await ctx.delete(ctx.message.id);
   ctx.creator.unregisterGlobalComponent(`member-accept-${user_id}`);
   ctx.creator.unregisterGlobalComponent(`member-reject-${user_id}`);
-
 }
 
 
@@ -130,6 +179,70 @@ async function onVerifyDenied(ctx: ComponentContext) {
   ctx.creator.unregisterGlobalComponent(`member-accept-${user_id}`);
   ctx.creator.unregisterGlobalComponent(`member-reject-${user_id}`);
 
+  try {
+    var res: ChannelDto = await ctx.creator.requestHandler.request(
+      "POST",
+      "/users/@me/channels",
+      {
+        auth: true,
+        body: {
+          "recipient_id": user_id
+        }
+      }
+    );
+    
+    await ctx.creator.requestHandler.request("POST", 
+      `/channels/${res.id}/messages`,
+      {
+        auth: true,
+        body: {
+          content: `Your member role request has been denied by ${ctx.user.globalName}.\n*If you believe this was an error, contact a member of committee!*`,
+          message_reference: {
+            type: 0,
+            message_id: res.last_message_id,
+            fail_if_not_exists: false
+          }
+        }                            
+      });
+
+  } catch(e) {
+    if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
+      if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
+        console.log(`Discord responded with ${e.code} whilst trying to create DM.`);
+        await ctx.send({
+          content: "Unable to send a DM.",
+          ephemeral: true
+        });
+      } else {
+        await ctx.send({
+          content: "An unexpected error occured whilst trying to DM the member.",
+          ephemeral: true
+        });
+        throw e;
+      }
+    }
+  };
+
+  await ctx.creator.requestHandler.request(
+    "POST", 
+    `/channels/${LOG_CHANNEL}/messages`,
+    {
+      auth: true,
+      body: {
+        embeds: [{
+          title: "Verification Denied",
+          description: `Member: @${res.recipients[0].username}`,
+          type: "rich",
+          color: 15548997,
+          timestamp: new Date(), 
+          author: {
+            name: ctx.user.globalName,
+            icon_url: ctx.user.avatarURL
+          }
+        }]
+      }
+    }
+  );
 }
 
 
@@ -147,7 +260,7 @@ export default class VerifyCommand extends SlashCommand {
 
   async run(ctx: CommandContext) {
     try {
-      var res: ChannelDto = await ctx.creator.requestHandler.request(
+      const res: ChannelDto = await ctx.creator.requestHandler.request(
         "POST",
         "/users/@me/channels",
         {

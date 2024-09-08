@@ -23,3 +23,19 @@ export interface UserDto {
     public_flags?: number,
     avatar_decoration_data?: AvatarDecorationDto
 }
+
+export interface GuildMemberDto {
+    user: UserDto,
+    nick?: string,
+    avatar?: string,
+    roles: Array<string>,
+    joined_at: Date,
+    premium_since?: Date,
+    deaf: boolean,
+    mute: boolean,
+    flags: number,
+    pending?: boolean,
+    permissions?: string,
+    communication_disabled_until?: Date,
+    avatar_decoration_data?: AvatarDecorationDto
+}
