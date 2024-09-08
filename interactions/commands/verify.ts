@@ -323,7 +323,14 @@ export default class VerifyCommand extends SlashCommand {
         {
           auth: true,
           body: {
-            content: "`Placeholder TOCs`",
+            content: 
+            `## Before you continue:
+             To verify your membership with the guild, we need to collect your full name and student email to check aginst our records.
+             - All personal information will only be stored temporarily for the purpose of checking you hold a valid Esports society membership.
+             - Any stored information will only be visible to current committee members and will be deleted as soon as your membership has been verified.
+             *Due to Guild restrictions, memberships need to be verified manually and make take up to a day*
+             
+             **By clicking accept, you agree to the above terms and conditions!**`,
             components: [
               {
                 type: ComponentType.ACTION_ROW,
