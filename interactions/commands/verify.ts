@@ -21,6 +21,11 @@ const MEMBER_ROLE = process.env['MEMBER_ROLE_ID'];
 const GUILD_ID = process.env['GUILD_ID'];
 
 
+async function onVerifyDecision(ctx: ComponentContext) {
+  
+}
+
+
 async function onFormComplete(ctx: ModalInteractionContext) {
   await ctx.delete(ctx.message.id);
 
@@ -176,7 +181,7 @@ async function onVerifyApproved(ctx: ComponentContext) {
       {
         auth: true,
         body: {
-          content: "You have now recieved your member role! Thank you for supporting the University of Exeter Esports Society 💚",
+          content: "**You have now recieved your member role!**\nThank you for supporting the University of Exeter Esports Society 💚",
           message_reference: {
             type: 0,
             message_id: dm_res.last_message_id,
@@ -331,13 +336,12 @@ export default class VerifyCommand extends SlashCommand {
           auth: true,
           body: {
             content: 
-            `## Before you continue:
-             To verify your membership with the guild, we need to collect your full name and student email to check aginst our records.
-             - All personal information will only be stored temporarily for the purpose of checking you hold a valid Esports society membership.
-             - Any stored information will only be visible to current committee members and will be deleted as soon as your membership has been verified.
-             *Due to Guild restrictions, memberships need to be verified manually and make take up to a day*
-             
-             **By clicking accept, you agree to the above terms and conditions!**`,
+            `### Before you continue, please read & accept following TOC's: 
+            To comply with GDPR, we process your information as below:
+            **-** *Personal information will only be stored temporarily for the purpose of checking you hold a valid Esports society membership.*
+            **-** *Information will only be visible to current committee members.*
+            **-** *Any stored information will be permanently deleted as soon as your membership has been verified.*
+            -# Any questions or issues, please don't hesitate to contact a member of committee! :slight_smile:`,
             components: [
               {
                 type: ComponentType.ACTION_ROW,
