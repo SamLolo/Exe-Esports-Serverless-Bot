@@ -6,7 +6,9 @@ import {
 const creator = new SlashCreator({
     applicationID: process.env["ESPORTS_APP_ID"],
     publicKey: process.env["ESPORTS_PUB_KEY"],
-    token: process.env["ESPORTS_TOKEN"]
+    token: process.env["ESPORTS_TOKEN"],
+    componentTimeouts: false,
+    endpointPath: "discord/interactions"
 });
 
 creator.on('debug', m => console.log('[DEBUG] slash-create:', m));
