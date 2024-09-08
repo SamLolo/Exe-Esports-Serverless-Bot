@@ -119,20 +119,39 @@ async function onPrivacyDecline(ctx: ComponentContext) {
 async function onVerifyApproved(ctx: ComponentContext) {
   const user_id = ctx.customID.substring(14);
 
-  const role_res: GuildMemberDto = await ctx.creator.requestHandler.request(
-    "PATCH",
-    `/guilds/${ctx.guildID}/members/${user_id}`,
-    {
-      auth: true,
-      body: {
-        roles: [MEMBER_ROLE]
+  try {
+    const role_res: GuildMemberDto = await ctx.creator.requestHandler.request(
+      "PATCH",
+      `/guilds/${ctx.guildID}/members/${user_id}`,
+      {
+        auth: true,
+        body: {
+          roles: [MEMBER_ROLE]
+        },
+        headers: {
+          "X-Audit-Log-Reason": "Membership verified by committee."
+        }
       }
+    );
+    console.log(role_res);
+  } catch(e) {
+    if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
+      console.log(`Discord responded with ${e.code} whilst trying to create DM.`);
+      await ctx.send({
+        content: "Unable to add member role.",
+        ephemeral: true
+      });
+    } else {
+      await ctx.send({
+        content: "An unexpected error occured whilst trying to add the meber role.",
+        ephemeral: true
+      })
+      throw e;
     }
-  );
-  console.log(role_res);
+  };
 
   try {
-    const res: ChannelDto = await ctx.creator.requestHandler.request(
+    var dm_res: ChannelDto = await ctx.creator.requestHandler.request(
       "POST",
       "/users/@me/channels",
       {
@@ -145,18 +164,25 @@ async function onVerifyApproved(ctx: ComponentContext) {
     
     await ctx.creator.requestHandler.request(
       "POST", 
-      `/channels/${res.id}/messages`,
+      `/channels/${dm_res.id}/messages`,
       {
         auth: true,
         body: {
-          content: "You have now recieved your member role! Thank you for supporting Univeristy of Exeter Esports Society 💚"
+          content: "You have now recieved your member role! Thank you for supporting Univeristy of Exeter Esports Society 💚",
+          message_reference: {
+            type: 0,
+            message_id: dm_res.last_message_id,
+            fail_if_not_exists: false
+          }
         }                            
       });
-    var DMSuccess = true;
   } catch(e) {
     if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
       console.log(`Discord responded with ${e.code} whilst trying to create DM.`);
-      var DMSuccess = false;
+      await ctx.send({
+        content: "Unable to send a DM.",
+        ephemeral: true
+      });
     } else {
       await ctx.send({
         content: "An unexpected error occured whilst trying to DM the member.",
@@ -169,15 +195,32 @@ async function onVerifyApproved(ctx: ComponentContext) {
   await ctx.delete(ctx.message.id);
   ctx.creator.unregisterGlobalComponent(`member-accept-${user_id}`);
   ctx.creator.unregisterGlobalComponent(`member-reject-${user_id}`);
+
+  await ctx.creator.requestHandler.request(
+    "POST", 
+    `/channels/${LOG_CHANNEL}/messages`,
+    {
+      auth: true,
+      body: {
+        embeds: [{
+          title: "Verification Accepted",
+          description: `Member: @${dm_res.recipients[0].username}`,
+          type: "rich",
+          color: 5763719,
+          timestamp: new Date(), 
+          author: {
+            name: ctx.user.globalName,
+            icon_url: ctx.user.avatarURL
+          }
+        }]
+      }
+    }
+  );
 }
 
 
 async function onVerifyDenied(ctx: ComponentContext) {
-  await ctx.delete(ctx.message.id);
-  
   const user_id = ctx.customID.substring(14);
-  ctx.creator.unregisterGlobalComponent(`member-accept-${user_id}`);
-  ctx.creator.unregisterGlobalComponent(`member-reject-${user_id}`);
 
   try {
     var res: ChannelDto = await ctx.creator.requestHandler.request(
@@ -222,6 +265,10 @@ async function onVerifyDenied(ctx: ComponentContext) {
       }
     }
   };
+
+  await ctx.delete(ctx.message.id);
+  ctx.creator.unregisterGlobalComponent(`member-accept-${user_id}`);
+  ctx.creator.unregisterGlobalComponent(`member-reject-${user_id}`);
 
   await ctx.creator.requestHandler.request(
     "POST", 
