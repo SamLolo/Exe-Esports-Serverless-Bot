@@ -223,7 +223,7 @@ async function onFormComplete(ctx: ModalInteractionContext) {
 
 
 async function onPrivacyAccept(ctx: ComponentContext) {
-  ctx.sendModal(
+  await ctx.sendModal(
     {
       title: 'Get Your Member Role',
       components: [
@@ -272,12 +272,43 @@ export default class VerifyCommand extends SlashCommand {
       description: "Get your membership role in Discord once you've purchased it from the guild."
     });
 
+    // Register component listeners
     creator.registerGlobalComponent("privacy_accept", onPrivacyAccept);
     creator.registerGlobalComponent("privacy_decline", onPrivacyDecline);
     creator.on('componentInteraction', onVerifyDecision);
   }
 
   async run(ctx: CommandContext) {
+    // Check that the user doesn't already have the member role
+    try {
+      const member: GuildMemberDto = await ctx.creator.requestHandler.request(
+          "GET",
+          `/guilds/${GUILD_ID}/members/${ctx.user.id}`,
+          {
+              auth: true
+          }
+      );
+      if (member.roles.includes(MEMBER_ROLE)) {
+          await ctx.send({
+              content: "You already have the member role.",
+              ephemeral: true
+          })
+          return;
+      };
+    } catch(e) {
+        await ctx.send({
+            content: "An error occured whilst trying to fetch user data.",
+            ephemeral: true
+            });
+        if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
+            console.log(`Discord responded with ${e.code} whilst trying to create DM.`);   
+        } else {
+            throw e;
+        }
+        return;
+    };
+
+    // Send TOC's via DM to user.
     try {
       const res: ChannelDto = await ctx.creator.requestHandler.request(
         "POST",
@@ -344,6 +375,7 @@ To comply with GDPR, we process your information as below:
       throw e;
     };
   
+    // Tell user to check their DM's
     await ctx.send({
       content: "Please check your DMs",
       ephemeral: true
