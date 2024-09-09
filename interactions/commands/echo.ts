@@ -91,13 +91,12 @@ export default class EchoCommand extends SlashCommand {
                 auth: true,
                 body: {
                     embeds: [{
-                    title: "New Message Sent",
                     description: ctx.options.message,
                     type: "rich",
                     color: 10181046,
                     timestamp: new Date(), 
                     author: {
-                        name: ctx.user.globalName,
+                        name: "Sent a message",
                         icon_url: ctx.user.avatarURL
                     }
                     }]

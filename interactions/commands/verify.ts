@@ -132,13 +132,12 @@ async function onVerifyDecision(ctx: ComponentContext) {
           auth: true,
           body: {
             embeds: [{
-              title: "Verification Accepted",
               description: `Member: <@${dm_res.recipients[0].id}>`,
               type: "rich",
               color: 5763719,
               timestamp: new Date(), 
               author: {
-                name: ctx.user.globalName,
+                name: "Verification Accepted",
                 icon_url: ctx.user.avatarURL
               }
             }]
@@ -153,13 +152,12 @@ async function onVerifyDecision(ctx: ComponentContext) {
           auth: true,
           body: {
             embeds: [{
-              title: "Verification Denied",
               description: `Member: <@${dm_res.recipients[0].id}>`,
               type: "rich",
               color: 15548997,
               timestamp: new Date(), 
               author: {
-                name: ctx.user.globalName,
+                name: "Verification Denied",
                 icon_url: ctx.user.avatarURL
               }
             }]
