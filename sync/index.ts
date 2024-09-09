@@ -21,6 +21,7 @@ const sync: AzureFunction = async function (
         token: process.env["ESPORTS_TOKEN"]
     });
 
+    creator.on('debug', m => console.log('[DEBUG] slash-create:', m));
     creator.on('warn', m => console.log('[WARNING] slash-create:', m));
     creator.on('error', m => console.log('[ERROR] slash-create:', m));
     
@@ -29,10 +30,10 @@ const sync: AzureFunction = async function (
 
     if (!guild) {
         context.log('Syncing commands globally.');
-        await creator.syncCommands();
+        await creator.syncGlobalCommands(true);
     } else {
         context.log(`Syncing commands to guild: ${guild}`);
-        await creator.syncCommandsIn(guild);
+        await creator.syncCommandsIn(guild, true);
     };
 
     context.res = {
