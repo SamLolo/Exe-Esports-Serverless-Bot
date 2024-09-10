@@ -1,6 +1,7 @@
 {
   "name": "serverless-discord",
   "version": "1.0.0",
+  "description": "",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
@@ -10,18 +11,13 @@
     "test": "echo \"No tests yet...\""
   },
   "author": "Sam Townley",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "@azure/identity": "^4.4.1",
-    "@azure/storage-blob": "^12.24.0",
-    "azure-functions-core-tools": "^4.0.5907",
     "slash-create": "^6.2.1"
   },
   "devDependencies": {
-    "@azure/functions": "^3.5.1",
-    "@types/node": "^22.5.1",
-    "eslint": "^9.9.1",
-    "rimraf": "^6.0.1"
+    "@azure/functions": "^3.0.0",
+    "@types/node": "^20.x",
+    "rimraf": "^5.0.0",
+    "typescript": "^4.0.0"
   }
 }
