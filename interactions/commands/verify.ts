@@ -216,7 +216,7 @@ async function onFormComplete(ctx: ModalInteractionContext) {
             }]
           }]
       }});
-  await ctx.send(`Thank you! Your request has been sent to the committee for moderation.\nYou will recieve an update here once you've recieved your role!`);
+  await ctx.send(`Thank you! Your request has been sent to the committee for moderation.\n-# You will recieve an update here once you've recieved your role!`);
 }
 
 
