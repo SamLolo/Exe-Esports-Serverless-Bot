@@ -55,4 +55,3 @@ jobs:
           app-name: 'exe-dc-bot'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
-          sku: "flexconsumption"
