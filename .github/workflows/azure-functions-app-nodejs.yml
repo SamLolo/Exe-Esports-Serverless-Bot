@@ -49,7 +49,7 @@ jobs:
           name: node-app
 
       - name: 'Deploy to Azure Functions App'
-        uses: Azure/functions-action@v1
+        uses: Azure/functions-action@v1.5.2
         id: fa
         with:
           app-name: 'exe-dc-bot'
