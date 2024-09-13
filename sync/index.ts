@@ -21,9 +21,9 @@ const sync: AzureFunction = async function (
         token: process.env["ESPORTS_TOKEN"]
     });
 
-    creator.on('debug', m => console.log('[DEBUG] slash-create:', m));
-    creator.on('warn', m => console.log('[WARNING] slash-create:', m));
-    creator.on('error', m => console.log('[ERROR] slash-create:', m));
+    creator.on('debug', m => context.log('[DEBUG] slash-create:', m));
+    creator.on('warn', m => context.log('[WARNING] slash-create:', m));
+    creator.on('error', m => context.log('[ERROR] slash-create:', m.message));
     
     context.log(`Registering commands in dir: 'interactions/commands'`);
     await creator.registerCommandsIn(require('path').join(__dirname,'../interactions/commands'));

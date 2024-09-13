@@ -6,7 +6,7 @@ name: Build and deploy Node.js project to Azure Function App
 on:
   push:
     branches:
-      - master
+      - production
 
 env:
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
@@ -66,7 +66,7 @@ jobs:
 
     steps:
     - name: Wait For Function App
-      run: sleep 60s
+      run: sleep 30s
       shell: bash
 
     - name: Send Sync Request
