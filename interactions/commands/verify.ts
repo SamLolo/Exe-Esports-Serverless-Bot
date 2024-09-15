@@ -257,7 +257,7 @@ async function onPrivacyAccept(ctx: ComponentContext) {
 
 
 async function onPrivacyDecline(ctx: ComponentContext) {
-  await ctx.delete(ctx.messageID);
+  await ctx.delete(ctx.message.id);
   ctx.send("**Operation Cancelled!**\nRun `/verify` to restart.")
 }
 

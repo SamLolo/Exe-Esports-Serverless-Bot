@@ -12,7 +12,8 @@
   },
   "author": "Sam Townley",
   "dependencies": {
-    "slash-create": "^6.2.1"
+    "slash-create": "^6.2.1",
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "@azure/functions": "^3.0.0",
