@@ -169,7 +169,13 @@ async function onVerifyDecision(ctx: ComponentContext) {
 
 
 async function onFormComplete(ctx: ModalInteractionContext) {
-  await ctx.delete(ctx.message.id);
+  await ctx.creator.requestHandler.request(
+    "DELETE",
+    `/channels/${ctx.channel.id}/messages/${ctx.message.id}`,
+    {
+      auth: true
+    }
+  );
 
   await ctx.creator.requestHandler.request("POST", 
     `/channels/${VERIFY_CHANNEL}/messages`,
@@ -257,8 +263,13 @@ async function onPrivacyAccept(ctx: ComponentContext) {
 
 
 async function onPrivacyDecline(ctx: ComponentContext) {
-  console.log("id: " + ctx.message.id);
-  await ctx.delete('1285352386121961512');
+  await ctx.creator.requestHandler.request(
+    "DELETE",
+    `/channels/${ctx.channel.id}/messages/${ctx.message.id}`,
+    {
+      auth: true
+    }
+  );
   await ctx.send("**Operation Cancelled!**\nRun `/verify` to restart.")
 }
 

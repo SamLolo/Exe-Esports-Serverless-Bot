@@ -35,6 +35,8 @@ async function interactionHandler(
     creator.on('debug', m => context.log('[DEBUG] slash-create:', m));
     creator.on('warn', m => context.log('[WARNING] slash-create:', m));
     creator.on('error', m => context.log('[ERROR] slash-create:', m.message));
+
+    creator.on('rawREST', r => context.log(r));
     
     context.log(`Registering commands in dir: 'commands'`);
     await creator.registerCommandsIn(require('path').join(__dirname,'../commands'));
