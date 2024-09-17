@@ -1,19 +1,20 @@
 import { 
-    AzureFunction, 
-    Context, 
-    HttpRequest
+    app,
+    HttpRequest,
+    HttpResponseInit,
+    InvocationContext
 } from "@azure/functions"
 
 import { 
     SlashCreator 
 } from 'slash-create';
 
-const sync: AzureFunction = async function (
-    context: Context, 
-    req: HttpRequest
-    ): Promise<void> {
+async function sync(
+    request: HttpRequest,
+    context: InvocationContext
+    ): Promise<HttpResponseInit> {
     context.log('Recieved Request to sync commands to Discord');
-    const guild = req.query.guild;
+    const guild = request.query.get('guild');
     
     const creator = new SlashCreator({
         applicationID: process.env["ESPORTS_APP_ID"],
@@ -36,11 +37,16 @@ const sync: AzureFunction = async function (
         await creator.syncCommandsIn(guild, true);
     };
 
-    context.res = {
+    return {
         status: 200,
         body: "Success"
     };
 
 };
 
-export default sync;
+app.http('sync', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: "discord/sync",
+    handler: sync
+})

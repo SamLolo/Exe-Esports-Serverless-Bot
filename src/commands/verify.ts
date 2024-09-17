@@ -11,8 +11,8 @@ import {
   DiscordRESTError
 } from 'slash-create';
 
-import { ChannelDto } from '../../Dtos/ChannelDto';
-import { GuildMemberDto } from '../../Dtos/UserDto';
+import { ChannelDto } from '../lib/interfaces/ChannelDto';
+import { GuildMemberDto } from '../lib/interfaces/UserDto';
 
 
 // Import environment settings
@@ -257,8 +257,9 @@ async function onPrivacyAccept(ctx: ComponentContext) {
 
 
 async function onPrivacyDecline(ctx: ComponentContext) {
-  await ctx.delete(ctx.message.id);
-  ctx.send("**Operation Cancelled!**\nRun `/verify` to restart.")
+  console.log("id: " + ctx.message.id);
+  await ctx.delete('1285352386121961512');
+  await ctx.send("**Operation Cancelled!**\nRun `/verify` to restart.")
 }
 
 

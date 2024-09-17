@@ -6,7 +6,7 @@ import {
     DiscordHTTPError,
     DiscordRESTError
 } from 'slash-create';
-import { GuildMemberDto } from '../../Dtos/UserDto';
+import { GuildMemberDto } from '../lib/interfaces/UserDto';
   
 
 const LOG_CHANNEL = process.env["LOG_CHANNEL_ID"];

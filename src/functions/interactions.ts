@@ -1,22 +1,23 @@
 import { 
-    AzureFunction, 
-    Context, 
+    app,
     HttpRequest, 
-    HttpResponseSimple
+    HttpResponseInit, 
+    InvocationContext
 } from '@azure/functions';
 
 import { 
     DiscordClient 
-} from '../Clients/Discord';
+} from '../lib/clients/Discord';
 
 import { 
     SlashCreator 
 } from 'slash-create';
+import { DiscordInteractionDto } from '../lib/interfaces/InteractionDto';
 
-const interactions: AzureFunction = async function (
-    context: Context, 
-    req: HttpRequest
-    ): Promise<HttpResponseSimple> {
+async function interactionHandler(
+    request: HttpRequest,
+    context: InvocationContext
+    ): Promise<HttpResponseInit> {
    
     // Setup a new Discord Client
     const discord = new DiscordClient(
@@ -35,50 +36,57 @@ const interactions: AzureFunction = async function (
     creator.on('warn', m => context.log('[WARNING] slash-create:', m));
     creator.on('error', m => context.log('[ERROR] slash-create:', m.message));
     
-    context.log(`Registering commands in dir: 'interactions/commands'`);
-    await creator.registerCommandsIn(require('path').join(__dirname,'../interactions/commands'));
+    context.log(`Registering commands in dir: 'commands'`);
+    await creator.registerCommandsIn(require('path').join(__dirname,'../commands'));
     
     // Verify Discord signature before handling request (https://discord.com/developers/docs/interactions/overview#setting-up-an-endpoint-validating-security-request-headers)
     context.log("Verifying Discord signature");
-    const secure: boolean = discord.verifyRequest(req.headers, req.rawBody);
+    const body: DiscordInteractionDto = JSON.parse(await request.text());
+    const secure: boolean = discord.verifyRequest(request.headers, JSON.stringify(body));
     if (!secure) {
         context.log("Invalid signature!");
         return {
-            statusCode: 401,
+            status: 401,
             body: "Invalid signature"
         }
     }
 
     // Handle ping request from Discord (https://discord.com/developers/docs/interactions/overview#setting-up-an-endpoint-acknowledging-ping-requests)
-    if (req.body.type == 1) {
+    if (body.type == 1) {
         context.log("Recieved PING request");
         return {
-            statusCode: 200,
-            body: { type: 1 },
+            status: 200,
+            jsonBody: { type: 1 },
             headers: { "Content-Type": "application/json"}
         }
     }
 
     context.log("Recieved interactions");
-    context.log(req.body);
+    context.log(body);
+    var slash_res;
 
     //@ts-ignore
     await creator._onInteraction(
-        req.body,
+        //@ts-ignore
+        body,
         async (response) => {
             context.log(response);
-            context.res.status = response.status || 200;
-            context.res.body = response.body;
+            slash_res = response;
         },
         true,
-        context
+        slash_res
     );
 
     return {
-        statusCode: context.res.status,
-        body: context.res.body,
+        status: slash_res.status || 200,
+        jsonBody: slash_res.body,
         headers: { "Content-Type": "application/json"}
     }
 };
 
-export default interactions;
+app.http("interactions", {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: "discord/interactions",
+    handler: interactionHandler
+})

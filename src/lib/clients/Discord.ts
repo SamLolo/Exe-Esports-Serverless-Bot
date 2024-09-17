@@ -1,5 +1,5 @@
 import { 
-    HttpRequestHeaders, 
+    HttpRequest, 
 } from "@azure/functions";
 
 import { 
@@ -13,10 +13,10 @@ export class DiscordClient {
         this.PUBLIC_KEY = pubKey;
     }
 
-    public verifyRequest(headers: HttpRequestHeaders, body: string): boolean {
+    public verifyRequest(headers: HttpRequest["headers"], body: string): boolean {
         const isVerified = require("tweetnacl").sign.detached.verify(
-            Buffer.from(headers['x-signature-timestamp'] + body),
-            Buffer.from(headers['x-signature-ed25519'], "hex"),
+            Buffer.from(headers.get('x-signature-timestamp') + body),
+            Buffer.from(headers.get('x-signature-ed25519'), "hex"),
             Buffer.from(this.PUBLIC_KEY, "hex")
         );
         if (!isVerified) {
