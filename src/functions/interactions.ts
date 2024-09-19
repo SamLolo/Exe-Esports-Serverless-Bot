@@ -12,7 +12,11 @@ import {
 import { 
     SlashCreator 
 } from 'slash-create';
-import { DiscordInteractionDto } from '../lib/interfaces/InteractionDto';
+
+import { 
+    DiscordInteractionDto
+} from '../lib/interfaces/InteractionDto';
+
 
 async function interactionHandler(
     request: HttpRequest,
@@ -101,6 +105,7 @@ async function interactionHandler(
     context.trace(`Response: ${JSON.stringify(response, null, 2)}`);
     return response;
 };
+
 
 app.http("interactions", {
     methods: ['POST'],
