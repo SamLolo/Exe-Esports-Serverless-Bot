@@ -16,7 +16,6 @@ const GUILD_ID = process.env['GUILD_ID'];
 
 export default class EchoCommand extends SlashCommand {
     constructor(creator: SlashCreator) {
-        console.log("Registered Command: /echo")
         super(creator, {
             name: 'echo',
             description: 'Sends a message with the bot account in another channel.',

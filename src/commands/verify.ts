@@ -121,7 +121,13 @@ async function onVerifyDecision(ctx: ComponentContext) {
     };
 
     // Delete message in #verification
-    await ctx.delete(ctx.message.id);
+    await ctx.creator.requestHandler.request(
+      "DELETE",
+      `/channels/${ctx.channel.id}/messages/${ctx.message.id}`,
+      {
+        auth: true
+      }
+    );
 
     // Send log message
     if (ctx.customID.includes("accept")) {
@@ -276,7 +282,6 @@ async function onPrivacyDecline(ctx: ComponentContext) {
 
 export default class VerifyCommand extends SlashCommand {
   constructor(creator: SlashCreator) {
-    console.log("Registered Command: /verify")
     super(creator, {
       name: 'verify',
       description: "Get your membership role in Discord once you've purchased it from the guild."

@@ -27,6 +27,7 @@ async function sync(
     creator.on('debug', m => context.log('slash-create:', m));
     creator.on('warn', m => context.warn('slash-create:', m));
     creator.on('error', m => context.error('slash-create:', m.message));
+    creator.on('rawREST', r => context.trace(`slash-create: Raw request: \n${JSON.stringify(r, null, 2)}`));
     
     context.log(`Registering commands in dir: 'src/commands'`);
     await creator.registerCommandsIn(require('path').join(__dirname,'../interactions/commands'));
