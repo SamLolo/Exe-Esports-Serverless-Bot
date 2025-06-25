@@ -53,7 +53,6 @@ async function onVerifyDecision(ctx: ComponentContext) {
         );
       } catch(e) {
         if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
-          console.log(`Discord responded with ${e.code} whilst trying to create DM.`);
           await ctx.send({
             content: "Unable to add member role.",
             ephemeral: true
@@ -106,7 +105,6 @@ async function onVerifyDecision(ctx: ComponentContext) {
       });
     } catch(e) {
       if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
-        console.log(`Discord responded with ${e.code} whilst trying to create DM.`);
         await ctx.send({
           content: "Unable to send a DM. Role added anyway!",
           ephemeral: true
@@ -174,8 +172,8 @@ async function onVerifyDecision(ctx: ComponentContext) {
 }
 
 
-async function onFormComplete(ctx: ModalInteractionContext) {
-  await ctx.creator.requestHandler.request(
+export async function onFormComplete(ctx, RESThandler) {
+  await RESThandler.request(
     "DELETE",
     `/channels/${ctx.channel.id}/messages/${ctx.message.id}`,
     {
@@ -183,7 +181,8 @@ async function onFormComplete(ctx: ModalInteractionContext) {
     }
   );
 
-  await ctx.creator.requestHandler.request("POST", 
+  await RESThandler.request(
+    "POST", 
     `/channels/${VERIFY_CHANNEL}/messages`,
     {
       auth: true,
@@ -196,17 +195,17 @@ async function onFormComplete(ctx: ModalInteractionContext) {
           fields: [
             {
               name: "Name",
-              value: ctx.values.name,
+              value: ctx.data.components[0].components[0].value,
               inline: true
             },
             {
               name: "Discord",
-              value: ctx.user.mention,
+              value: `<@${ctx.user.id}>`,
               inline: true
             },
             {
               name: "Student Email",
-              value: ctx.values.email,
+              value: ctx.data.components[1].components[0].value,
               inline: false
             }]
         }],
@@ -228,7 +227,10 @@ async function onFormComplete(ctx: ModalInteractionContext) {
             }]
           }]
       }});
-  await ctx.send(`Thank you! Your request has been sent to the committee for moderation.\n-# You will recieve an update here once you've recieved your role!`);
+    
+      return {
+        content: `Thank you! Your request has been sent to the committee for moderation.\n-# You will recieve an update here once you've recieved your role!`                         
+      }
 }
 
 
@@ -236,6 +238,7 @@ async function onPrivacyAccept(ctx: ComponentContext) {
   await ctx.sendModal(
     {
       title: 'Get Your Member Role',
+      custom_id: 'verify-form',
       components: [
         {
           type: ComponentType.ACTION_ROW,
@@ -262,8 +265,7 @@ async function onPrivacyAccept(ctx: ComponentContext) {
           ]
         },
       ]
-    },
-    onFormComplete
+    }
   );
 }
 
@@ -311,16 +313,12 @@ export default class VerifyCommand extends SlashCommand {
           return;
       };
     } catch(e) {
+        console.error(e);
         await ctx.send({
             content: "An error occured whilst trying to fetch user data.",
             ephemeral: true
             });
-        if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
-            console.log(`Discord responded with ${e.code} whilst trying to create DM.`);   
-        } else {
-            throw e;
-        }
-        return;
+        throw e;
     };
 
     // Send TOC's via DM to user.
@@ -379,7 +377,11 @@ To comply with GDPR, we process your information as below:
           return;  
         
         } else {
-          console.log(`Discord responded with ${e.code} whilst trying to create DM.`);
+          await ctx.send({
+            content: "An unknown error occured. If this issue persists, contact a member of committee!",
+            ephemeral: true
+          });
+          throw e;
         }
       }
       

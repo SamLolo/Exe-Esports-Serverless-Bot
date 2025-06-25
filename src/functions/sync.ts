@@ -24,10 +24,11 @@ async function sync(
         token: process.env["ESPORTS_TOKEN"]
     });
 
-    creator.on('debug', m => context.log('slash-create:', m));
-    creator.on('warn', m => context.warn('slash-create:', m));
-    creator.on('error', m => context.error('slash-create:', m.message));
-    creator.on('rawREST', r => context.trace(`slash-create: Raw request: \n${JSON.stringify(r, null, 2)}`));
+    // Redirect slash-create events to context so they appear in app insights
+    creator.on('debug', m => context.log('[slash-create]', m));
+    creator.on('warn', m => context.warn('[slash-create]', m));
+    creator.on('error', m => context.error('[slash-create]', m.message));
+    creator.on('rawREST', r => context.debug('[slash-create] Raw request:', r));
     
     context.log(`Registering commands in dir: 'src/commands'`);
     await creator.registerCommandsIn(require('path').join(__dirname,'../interactions/commands'));
@@ -45,7 +46,7 @@ async function sync(
         body: "Success"
     };
 
-    context.trace(`Response: ${JSON.stringify(response, null, 2)}`);
+    context.debug(`Response: ${JSON.stringify(response, null, 2)}`);
     return response;
 
 };

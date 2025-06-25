@@ -20,8 +20,8 @@ export interface UserDto {
     email?: string | undefined,
     flags?: number,
     premium_type?: number,
-    public_flags?: number,
-    avatar_decoration_data?: AvatarDecorationDto
+    public_flags: number,
+    avatar_decoration_data: AvatarDecorationDto
 }
 
 export interface GuildMemberDto {
