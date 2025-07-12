@@ -2,7 +2,7 @@
   "name": "serverless-discord",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/functions/*.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
@@ -13,11 +13,11 @@
   },
   "author": "Sam Townley",
   "dependencies": {
-    "slash-create": "^6.2.1",
-    "tweetnacl": "^1.0.3"
+    "discord-api-types": "^0.38.15",
+    "slash-create": "^6.2.1"
   },
   "devDependencies": {
-    "@azure/functions": "^4.5.1",
+    "@azure/functions": "^4.0.0",
     "@types/node": "^20.x",
     "rimraf": "^5.0.0",
     "typescript": "^4.0.0"

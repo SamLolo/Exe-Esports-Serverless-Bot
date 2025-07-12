@@ -1,3 +1,14 @@
+
+import { 
+    APIGuildMember
+} from 'discord-api-types/v10'
+
+import { 
+    LOG_CHANNEL, 
+    GUILD_ID, 
+    COMMITTEE_ROLE 
+} from '../settings';
+
 import { 
     SlashCommand, 
     CommandOptionType, 
@@ -6,13 +17,6 @@ import {
     DiscordHTTPError,
     DiscordRESTError
 } from 'slash-create';
-import { GuildMemberDto } from '../lib/interfaces/UserDto';
-  
-
-const LOG_CHANNEL = process.env["LOG_CHANNEL_ID"];
-const COMMITTEE_ROLE = process.env['COMMITTEE_ROLE_ID'];
-const GUILD_ID = process.env['GUILD_ID'];
-
 
 export default class EchoCommand extends SlashCommand {
     constructor(creator: SlashCreator) {
@@ -39,7 +43,7 @@ export default class EchoCommand extends SlashCommand {
 
         // Check that the user has committee role to be able to run the command
         try {
-            const member: GuildMemberDto = await ctx.creator.requestHandler.request(
+            const member: APIGuildMember = await ctx.creator.requestHandler.request(
                 "GET",
                 `/guilds/${GUILD_ID}/members/${ctx.user.id}`,
                 {

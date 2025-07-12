@@ -3,284 +3,20 @@ import {
   CommandContext, 
   SlashCreator, 
   ComponentType,
-  TextInputStyle,
-  ModalInteractionContext,
   ButtonStyle,
-  ComponentContext,
   DiscordHTTPError,
   DiscordRESTError
 } from 'slash-create';
 
-import { ChannelDto } from '../lib/interfaces/ChannelDto';
-import { GuildMemberDto } from '../lib/interfaces/UserDto';
+import {
+  MEMBER_ROLE,
+  GUILD_ID
+} from '../settings'
 
-
-// Import environment settings
-const VERIFY_CHANNEL = process.env["VERIFY_CHANNEL_ID"];
-const LOG_CHANNEL = process.env["LOG_CHANNEL_ID"];
-const MEMBER_ROLE = process.env['MEMBER_ROLE_ID'];
-const GUILD_ID = process.env['GUILD_ID'];
-
-
-async function onVerifyDecision(ctx: ComponentContext) {
-  if (ctx.customID.includes("member-accept") || ctx.customID.includes("member-reject")) {
-    // Get target member ID
-    const user_id = ctx.customID.substring(14);
-    
-    // Add role to user if they've been accepted
-    if (ctx.customID.includes("accept")) {
-      try {
-        const member: GuildMemberDto = await ctx.creator.requestHandler.request(
-          "GET",
-          `/guilds/${GUILD_ID}/members/${user_id}`,
-          {
-            auth: true
-          }
-        );
-        member.roles.push(MEMBER_ROLE);
-        await ctx.creator.requestHandler.request(
-          "PATCH",
-          `/guilds/${GUILD_ID}/members/${user_id}`,
-          {
-            auth: true,
-            body: {
-              roles: member.roles
-            },
-            headers: {
-              "X-Audit-Log-Reason": "Membership verified by committee."
-            }
-          }
-        );
-      } catch(e) {
-        if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
-          await ctx.send({
-            content: "Unable to add member role.",
-            ephemeral: true
-          });
-          return;
-        } else {
-          await ctx.send({
-            content: "An unexpected error occured whilst trying to add the meber role.",
-            ephemeral: true
-          })
-          throw e;
-        }
-      };
-    };
-
-    // Create DM channel with User
-    try {
-      var dm_res: ChannelDto = await ctx.creator.requestHandler.request(
-        "POST",
-        "/users/@me/channels",
-        {
-          auth: true,
-          body: {
-            "recipient_id": user_id
-          }
-        }
-      );
-      
-      // Set DM message based on if they've been accepted or declined
-      if (ctx.customID.includes("accept")) {
-        var dm_content: string = "**You have now recieved your member role!**\nThank you for supporting the University of Exeter Esports Society 💚";
-      } else {
-        var dm_content: string = `Your member role request has been denied by ${ctx.user.globalName}.\n*If you believe this was an error, contact a member of committee!*`;
-      }
-
-      // Post message to user's DM's as a response to the previous message
-      await ctx.creator.requestHandler.request(
-        "POST", 
-        `/channels/${dm_res.id}/messages`,
-        {
-          auth: true,
-          body: {
-            content: dm_content,
-            message_reference: {
-              type: 0,
-              message_id: dm_res.last_message_id,
-              fail_if_not_exists: false
-            }
-          }                            
-      });
-    } catch(e) {
-      if (e instanceof DiscordHTTPError || e instanceof DiscordRESTError ) {
-        await ctx.send({
-          content: "Unable to send a DM. Role added anyway!",
-          ephemeral: true
-        });
-      } else {
-        await ctx.send({
-          content: "An unexpected error occured whilst trying to DM the member. Role has been applied.",
-          ephemeral: true
-        })
-        throw e;
-      }
-    };
-
-    // Delete message in #verification
-    await ctx.creator.requestHandler.request(
-      "DELETE",
-      `/channels/${ctx.channel.id}/messages/${ctx.message.id}`,
-      {
-        auth: true
-      }
-    );
-
-    // Send log message
-    if (ctx.customID.includes("accept")) {
-      await ctx.creator.requestHandler.request(
-        "POST", 
-        `/channels/${LOG_CHANNEL}/messages`,
-        {
-          auth: true,
-          body: {
-            embeds: [{
-              description: `Member: <@${dm_res.recipients[0].id}>`,
-              type: "rich",
-              color: 5763719,
-              timestamp: new Date(), 
-              author: {
-                name: "Verification Accepted",
-                icon_url: ctx.user.avatarURL
-              }
-            }]
-          }
-        }
-      );
-    } else {
-      await ctx.creator.requestHandler.request(
-        "POST", 
-        `/channels/${LOG_CHANNEL}/messages`,
-        {
-          auth: true,
-          body: {
-            embeds: [{
-              description: `Member: <@${dm_res.recipients[0].id}>`,
-              type: "rich",
-              color: 15548997,
-              timestamp: new Date(), 
-              author: {
-                name: "Verification Denied",
-                icon_url: ctx.user.avatarURL
-              }
-            }]
-        }}
-      );
-    }
-  }
-}
-
-
-export async function onFormComplete(ctx, RESThandler) {
-  await RESThandler.request(
-    "DELETE",
-    `/channels/${ctx.channel.id}/messages/${ctx.message.id}`,
-    {
-      auth: true
-    }
-  );
-
-  await RESThandler.request(
-    "POST", 
-    `/channels/${VERIFY_CHANNEL}/messages`,
-    {
-      auth: true,
-      body: {
-        embeds: [{
-          title: "Verification Request",
-          type: "rich",
-          color: 2067276,
-          timestamp: new Date(), 
-          fields: [
-            {
-              name: "Name",
-              value: ctx.data.components[0].components[0].value,
-              inline: true
-            },
-            {
-              name: "Discord",
-              value: `<@${ctx.user.id}>`,
-              inline: true
-            },
-            {
-              name: "Student Email",
-              value: ctx.data.components[1].components[0].value,
-              inline: false
-            }]
-        }],
-        components: [
-          {
-            type: ComponentType.ACTION_ROW,
-            components: [
-              {
-              custom_id: `member-reject-${ctx.user.id}`,
-              label: "Reject",
-              style: ButtonStyle.DANGER,
-              type: ComponentType.BUTTON
-            },
-            {
-              custom_id: `member-accept-${ctx.user.id}`,
-              label: "Accept",
-              style: ButtonStyle.SUCCESS,
-              type: ComponentType.BUTTON
-            }]
-          }]
-      }});
-    
-      return {
-        content: `Thank you! Your request has been sent to the committee for moderation.\n-# You will recieve an update here once you've recieved your role!`                         
-      }
-}
-
-
-async function onPrivacyAccept(ctx: ComponentContext) {
-  await ctx.sendModal(
-    {
-      title: 'Get Your Member Role',
-      custom_id: 'verify-form',
-      components: [
-        {
-          type: ComponentType.ACTION_ROW,
-          components: [
-            {
-              type: ComponentType.TEXT_INPUT,
-              label: 'Full Name',
-              style: TextInputStyle.SHORT,
-              custom_id: 'name',
-              placeholder: 'Enter your full name as on your guild account...'
-            }
-          ]
-        },
-        {
-          type: ComponentType.ACTION_ROW,
-          components: [
-            {
-              type: ComponentType.TEXT_INPUT,
-              label: 'Student Email',
-              style: TextInputStyle.SHORT,
-              custom_id: 'email',
-              placeholder: 'Enter your student email...'
-            }
-          ]
-        },
-      ]
-    }
-  );
-}
-
-
-async function onPrivacyDecline(ctx: ComponentContext) {
-  await ctx.creator.requestHandler.request(
-    "DELETE",
-    `/channels/${ctx.channel.id}/messages/${ctx.message.id}`,
-    {
-      auth: true
-    }
-  );
-  await ctx.send("**Operation Cancelled!**\nRun `/verify` to restart.")
-}
-
+import { 
+  APIGuildMember,
+  APIChannel
+} from 'discord-api-types/v10'
 
 export default class VerifyCommand extends SlashCommand {
   constructor(creator: SlashCreator) {
@@ -288,17 +24,12 @@ export default class VerifyCommand extends SlashCommand {
       name: 'verify',
       description: "Get your membership role in Discord once you've purchased it from the guild."
     });
-
-    // Register component listeners
-    creator.registerGlobalComponent("privacy_accept", onPrivacyAccept);
-    creator.registerGlobalComponent("privacy_decline", onPrivacyDecline);
-    creator.on('componentInteraction', onVerifyDecision);
   }
 
   async run(ctx: CommandContext) {
     // Check that the user doesn't already have the member role
     try {
-      const member: GuildMemberDto = await ctx.creator.requestHandler.request(
+      const member: APIGuildMember = await ctx.creator.requestHandler.request(
           "GET",
           `/guilds/${GUILD_ID}/members/${ctx.user.id}`,
           {
@@ -323,7 +54,7 @@ export default class VerifyCommand extends SlashCommand {
 
     // Send TOC's via DM to user.
     try {
-      const res: ChannelDto = await ctx.creator.requestHandler.request(
+      const res: APIChannel = await ctx.creator.requestHandler.request(
         "POST",
         "/users/@me/channels",
         {
