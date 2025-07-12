@@ -9,7 +9,7 @@ import {
     ButtonStyle
 } from "slash-create";
 
-export async function onFormComplete(ctx: ModalInteractionContext) {
+export default async function onFormComplete(ctx: ModalInteractionContext) {
     if ('components' in ctx.data.data.components[0] && 'components' in ctx.data.data.components[1]) {
         await ctx.creator.requestHandler.request(
         "POST", 

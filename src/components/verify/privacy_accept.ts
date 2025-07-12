@@ -5,6 +5,8 @@ import {
     TextInputStyle
 } from 'slash-create';
 
+import onFormComplete from './form_complete';
+
 export default async function onPrivacyAccept(ctx: ComponentContext) {
     await ctx.sendModal(
       {
@@ -36,6 +38,7 @@ export default async function onPrivacyAccept(ctx: ComponentContext) {
             ]
           },
         ]
-      }
+      },
+      onFormComplete
     );
   }
