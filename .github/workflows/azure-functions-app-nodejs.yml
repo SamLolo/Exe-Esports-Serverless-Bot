@@ -10,7 +10,7 @@ on:
 
 env:
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
-  NODE_VERSION: '20.x'
+  NODE_VERSION: '24.x'
 
 jobs:
   Build:
@@ -72,7 +72,7 @@ jobs:
       id: sync-request
       uses: fjogeleit/http-request-action@v1
       with:
-        url: 'https://exe-dc-bot.azurewebsites.net/api/discord/sync'
+        url: 'https://exe-dc-bot.azurewebsites.net/api/sync'
         method: 'POST'
 
     - name: Check Commands Synced Correctly
