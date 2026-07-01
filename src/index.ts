@@ -1,12 +1,14 @@
 
 import { app } from "@azure/functions"
 import { AzureFunctionV4Server, SlashCreator } from 'slash-create';
+import { sync } from "./functions/sync";
+
+// Import commands
+import EchoCommand from './commands/echo';
+import VerifyCommand from "./commands/verify";
 
 // Import components
 import onPrivacyAccept from './components/verify/privacy_accept';
-import onPrivacyDecline from './components/verify/privacy_decline';
-import onMemberAccept from './components/verify/member_accept';
-import onMemberDecline from './components/verify/member_decline';
 
 export const creator = new SlashCreator({
     applicationID: process.env.ESPORTS_APP_ID,
@@ -21,16 +23,19 @@ creator.on('warn', m => console.warn('[slash-create]', m));
 creator.on('error', m => console.error('[slash-create]', m.message));
 creator.on('rawREST', r => console.debug('[slash-create] Raw request:', r));
 
-async () => {
-    console.log("Registering commands");
-    await creator.registerCommandsIn(require('path').join(__dirname, 'commands'));
+// Register commands
+console.log("[slash-create] Registering commands");
+creator.registerCommand(EchoCommand);
+creator.registerCommand(VerifyCommand);
 
-    console.log("Registering global callbacks");
-    creator.registerGlobalComponent("privacy_accept", onPrivacyAccept);
-    creator.registerGlobalComponent("privacy_decline", onPrivacyDecline);
-    creator.registerGlobalComponent("member-accept", onMemberAccept);
-    creator.registerGlobalComponent("member-decline", onMemberDecline);
+// Register global components
+console.log("[slash-create] Registering global callbacks");
+creator.registerGlobalComponent("privacy_accept", onPrivacyAccept);
 
-    console.log("Syncing commands globally on startup. This may take a moment...");
-    await creator.syncGlobalCommands(true);
-};
+// Add sync function
+app.http('sync', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: "sync",
+    handler: sync
+})

@@ -9,6 +9,9 @@ import {
     ButtonStyle
 } from "slash-create";
 
+import onMemberAccept from './member_accept';
+import onMemberDecline from './member_decline';
+
 export default async function onFormComplete(ctx: ModalInteractionContext) {
     if ('components' in ctx.data.data.components[0] && 'components' in ctx.data.data.components[1]) {
         await ctx.creator.requestHandler.request(
@@ -58,20 +61,13 @@ export default async function onFormComplete(ctx: ModalInteractionContext) {
                 }]
             }});
         
+        ctx.creator.registerGlobalComponent(`member-accept-${ctx.user.id}`, onMemberAccept);
+        ctx.creator.registerGlobalComponent(`member-reject-${ctx.user.id}`, onMemberDecline);
         await ctx.send(`Thank you! Your request has been sent to the committee for moderation.\n-# You will recieve an update here once you've recieved your role!`)
-
-        await ctx.creator.requestHandler.request(
-            "DELETE",
-            `/channels/${ctx.channel.id}/messages/${ctx.message.id}`,
-            {
-              auth: true
-            }
-          );
 
     } else {
         await ctx.send({
-            content: `An error occured whilst submitting the form. Please try again!`,
-            ephemeral: true
+            content: `An error occured whilst submitting the form. Please try again or contact a member of committee if this issue persists.`
         })
     }
 }

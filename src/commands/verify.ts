@@ -44,7 +44,6 @@ export default class VerifyCommand extends SlashCommand {
           return;
       };
     } catch(e) {
-        console.error(e);
         await ctx.send({
             content: "An error occured whilst trying to fetch user data.",
             ephemeral: true
@@ -54,7 +53,7 @@ export default class VerifyCommand extends SlashCommand {
 
     // Send TOC's via DM to user.
     try {
-      const res: APIChannel = await ctx.creator.requestHandler.request(
+      const dm_channel: APIChannel = await ctx.creator.requestHandler.request(
         "POST",
         "/users/@me/channels",
         {
@@ -65,8 +64,9 @@ export default class VerifyCommand extends SlashCommand {
         }
       );
       
-      await ctx.creator.requestHandler.request("POST", 
-        `/channels/${res.id}/messages`,
+      await ctx.creator.requestHandler.request(
+        "POST", 
+        `/channels/${dm_channel.id}/messages`,
         {
           auth: true,
           body: {
@@ -82,17 +82,12 @@ To comply with GDPR, we process your information as below:
                 type: ComponentType.ACTION_ROW,
                 components: [
                   {
-                  custom_id: 'privacy_decline',
-                  label: "Cancel",
-                  style: ButtonStyle.SECONDARY,
-                  type: ComponentType.BUTTON
-                },
-                {
-                  custom_id: 'privacy_accept',
-                  label: "Accept",
-                  style: ButtonStyle.SUCCESS,
-                  type: ComponentType.BUTTON
-                }]
+                    custom_id: 'privacy_accept',
+                    label: "Verify",
+                    style: ButtonStyle.PRIMARY,
+                    type: ComponentType.BUTTON
+                  }
+                ]
               }
             ]
           }                            
@@ -106,14 +101,7 @@ To comply with GDPR, we process your information as below:
             ephemeral: true
           });
           return;  
-        
-        } else {
-          await ctx.send({
-            content: "An unknown error occured. If this issue persists, contact a member of committee!",
-            ephemeral: true
-          });
-          throw e;
-        }
+        } 
       }
       
       await ctx.send({
