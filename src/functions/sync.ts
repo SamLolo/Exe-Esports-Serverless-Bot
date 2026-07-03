@@ -9,22 +9,19 @@ import { creator } from '../index';
 
 export async function sync(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     context.log('Recieved Request to sync commands to Discord');
+
+    // Log registered commands for debugging
     context.log('[slash-create] Commands to sync: ', creator.commands.keys());
 
-    const guild = request.query.get('guild');
-    if (!guild) {
-        context.log('[slash-create] Syncing commands globally.');
-        await creator.syncGlobalCommands(true);
-    } else {
-        context.log(`[slash-create] Syncing commands to guild: ${guild}`);
-        await creator.syncCommandsIn(guild, true);
-    };
+    // Sync all registered commands
+    await creator.syncCommands({
+        syncGuilds: true,
+        deleteCommands: true,
+        skipGuildErrors: true
+    });
 
-    const response: HttpResponseInit = {
+    return {
         status: 200,
         body: "Success"
     };
-
-    context.debug(`Response: ${JSON.stringify(response, null, 2)}`);
-    return response;
 };
