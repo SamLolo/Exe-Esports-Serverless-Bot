@@ -42,12 +42,9 @@ export default class LFGCommand extends SlashCommand {
             // Get role ID
             const role: string = LFG_ROLES.get(ctx.channel.parentID)
 
-            // Construct message
-            console.log(ctx.options.message)
-
             // Send lfg request in channel
             await ctx.send({
-                content: `<@&${role}>`
+                content: (ctx.options.message == undefined) ? `<@&${role}>` : `${ctx.options.message}\n<@&${role}>`
             });
 
         // Handle case where category ID isn't configured above
