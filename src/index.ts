@@ -3,10 +3,6 @@ import { app } from "@azure/functions"
 import { AzureFunctionV4Server, SlashCreator } from 'slash-create';
 import { sync } from "./functions/sync";
 
-// Import commands
-import EchoCommand from './commands/echo';
-import VerifyCommand from "./commands/verify";
-
 // Import components
 import onPrivacyAccept from './components/verify/privacy_accept';
 
@@ -25,8 +21,7 @@ creator.on('rawREST', r => console.debug('[slash-create] Raw request:', r));
 
 // Register commands
 console.log("[slash-create] Registering commands");
-creator.registerCommand(EchoCommand);
-creator.registerCommand(VerifyCommand);
+creator.registerCommandsIn(require('path').join(__dirname, 'commands'))
 
 // Register global components
 console.log("[slash-create] Registering global callbacks");
